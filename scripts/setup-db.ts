@@ -79,11 +79,62 @@ async function setup() {
       "conversation_id" uuid NOT NULL REFERENCES "${p("chat_conversations")}"("id") ON DELETE CASCADE,
       "role" text NOT NULL,
       "content" text NOT NULL,
+      "sources" jsonb,
       "created_at" timestamp DEFAULT now() NOT NULL,
       "updated_at" timestamp DEFAULT now() NOT NULL
     )
   `);
+  // Add sources column to existing tables (idempotent)
+  await sql.unsafe(`
+    ALTER TABLE "${p("chat_messages")}"
+    ADD COLUMN IF NOT EXISTS "sources" jsonb
+  `);
   console.log(`  ${p("chat_messages")}`);
+
+  // 5. Knowledge entries table (shared — no prefix, crowdsourced RAG)
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS "knowledge_entries" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      "title" varchar(200) NOT NULL,
+      "content" text NOT NULL,
+      "tags" text[] NOT NULL DEFAULT '{}',
+      "contributor" varchar(100) NOT NULL,
+      "created_at" timestamp DEFAULT now() NOT NULL,
+      "updated_at" timestamp DEFAULT now() NOT NULL
+    )
+  `);
+  console.log("  knowledge_entries (shared)");
+
+  // 6. Full-text search support for knowledge entries
+  await sql.unsafe(`
+    ALTER TABLE "knowledge_entries"
+    ADD COLUMN IF NOT EXISTS "search_vector" tsvector
+  `);
+
+  await sql.unsafe(`
+    CREATE OR REPLACE FUNCTION knowledge_search_vector_update() RETURNS trigger AS $$
+    BEGIN
+      NEW.search_vector :=
+        setweight(to_tsvector('english', COALESCE(NEW.title, '')), 'A') ||
+        setweight(to_tsvector('english', COALESCE(NEW.content, '')), 'B');
+      RETURN NEW;
+    END $$ LANGUAGE plpgsql
+  `);
+
+  await sql.unsafe(`
+    DROP TRIGGER IF EXISTS trg_knowledge_search_vector ON knowledge_entries
+  `);
+  await sql.unsafe(`
+    CREATE TRIGGER trg_knowledge_search_vector
+      BEFORE INSERT OR UPDATE ON knowledge_entries
+      FOR EACH ROW EXECUTE FUNCTION knowledge_search_vector_update()
+  `);
+
+  await sql.unsafe(`
+    CREATE INDEX IF NOT EXISTS idx_knowledge_search
+    ON knowledge_entries USING GIN(search_vector)
+  `);
+  console.log("  knowledge_entries FTS index + trigger");
 
   console.log("\nDone! All tables created.");
 
@@ -91,7 +142,7 @@ async function setup() {
     console.log(
       `\nYour tables: ${p("projects")}, ${p("chat_conversations")}, ${p("chat_messages")}`,
     );
-    console.log("Shared table: users");
+    console.log("Shared tables: users, knowledge_entries");
   }
 
   await sql.end();

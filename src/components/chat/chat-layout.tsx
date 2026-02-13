@@ -19,6 +19,7 @@ export function ChatLayout() {
     isStreaming,
     isLoadingMessages,
     streamingContent,
+    knowledgeSources,
     sendMessage,
     selectConversation,
     createNewChat,
@@ -54,7 +55,12 @@ export function ChatLayout() {
       />
 
       <div className="chat-gradient-bg flex flex-1 flex-col">
-        <ChatHeader title={activeTitle} onToggleSidebar={toggleSidebar} />
+        <ChatHeader
+          title={activeTitle}
+          conversationId={activeConversationId}
+          onToggleSidebar={toggleSidebar}
+          onDelete={deleteConversation}
+        />
 
         {isLoadingMessages && activeConversationId ? (
           <div className="flex-1 overflow-y-auto">
@@ -80,6 +86,7 @@ export function ChatLayout() {
             messages={messages}
             streamingContent={streamingContent}
             isStreaming={isStreaming}
+            knowledgeSources={knowledgeSources}
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">

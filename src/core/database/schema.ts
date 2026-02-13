@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 /**
  * Table name prefix for multi-tenant workshop environments.
@@ -83,5 +83,20 @@ export const chatMessages = pgTable(t("chat_messages"), {
     .references(() => chatConversations.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
   content: text("content").notNull(),
+  sources: jsonb("sources"),
+  ...timestamps,
+});
+
+/**
+ * Knowledge entries table - shared knowledge base for crowdsourced RAG.
+ * SHARED (unprefixed) so all workshop participants contribute to the same pool.
+ * Full-text search is handled via a tsvector column + trigger created in setup-db.ts.
+ */
+export const knowledgeEntries = pgTable("knowledge_entries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: varchar("title", { length: 200 }).notNull(),
+  content: text("content").notNull(),
+  tags: text("tags").array().notNull(),
+  contributor: varchar("contributor", { length: 100 }).notNull(),
   ...timestamps,
 });

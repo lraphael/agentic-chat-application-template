@@ -4,22 +4,24 @@ import { Bot } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
+import type { ChatMessage, KnowledgeSource } from "@/hooks/use-chat";
 
+import { ContextSources } from "../knowledge/context-sources";
 import { MessageBubble } from "./message-bubble";
 
-interface Message {
-  id: string;
-  role: string;
-  content: string;
-}
-
 interface MessageListProps {
-  messages: Message[];
+  messages: ChatMessage[];
   streamingContent: string;
   isStreaming: boolean;
+  knowledgeSources?: KnowledgeSource[];
 }
 
-export function MessageList({ messages, streamingContent, isStreaming }: MessageListProps) {
+export function MessageList({
+  messages,
+  streamingContent,
+  isStreaming,
+  knowledgeSources = [],
+}: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollToBottom, isScrolledToBottom } = useAutoScroll(containerRef);
   const prevMessageCountRef = useRef(messages.length);
@@ -46,8 +48,16 @@ export function MessageList({ messages, streamingContent, isStreaming }: Message
     <div ref={containerRef} className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-3xl py-4">
         {messages.map((message) => (
-          <MessageBubble key={message.id} role={message.role} content={message.content} />
+          <div key={message.id}>
+            <MessageBubble role={message.role} content={message.content} />
+            {message.role === "assistant" && message.sources && message.sources.length > 0 && (
+              <ContextSources sources={message.sources} />
+            )}
+          </div>
         ))}
+        {isStreaming && knowledgeSources.length > 0 && (
+          <ContextSources sources={knowledgeSources} />
+        )}
         {isStreaming && streamingContent && (
           <div className="flex gap-3 px-4 py-3">
             <div className="bg-muted flex size-8 shrink-0 items-center justify-center rounded-full">

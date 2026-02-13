@@ -69,10 +69,20 @@ export async function addMessage(
   conversationId: string,
   role: string,
   content: string,
+  sources?: Array<{ id: string; title: string; contributor: string }>,
 ): Promise<Message> {
   logger.info({ conversationId, role }, "message.add_started");
 
-  const message = await repository.createMessage({ conversationId, role, content });
+  const data: Parameters<typeof repository.createMessage>[0] = {
+    conversationId,
+    role,
+    content,
+  };
+  if (sources && sources.length > 0) {
+    data.sources = sources;
+  }
+
+  const message = await repository.createMessage(data);
 
   logger.info({ conversationId, messageId: message.id }, "message.add_completed");
   return message;
