@@ -14,6 +14,7 @@ interface MessageListProps {
   streamingContent: string;
   isStreaming: boolean;
   knowledgeSources?: KnowledgeSource[];
+  onOpenKnowledge?: () => void;
 }
 
 export function MessageList({
@@ -21,6 +22,7 @@ export function MessageList({
   streamingContent,
   isStreaming,
   knowledgeSources = [],
+  onOpenKnowledge,
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollToBottom, isScrolledToBottom } = useAutoScroll(containerRef);
@@ -51,12 +53,18 @@ export function MessageList({
           <div key={message.id}>
             <MessageBubble role={message.role} content={message.content} />
             {message.role === "assistant" && message.sources && message.sources.length > 0 && (
-              <ContextSources sources={message.sources} />
+              <ContextSources
+                sources={message.sources}
+                {...(onOpenKnowledge ? { onOpenKnowledge } : {})}
+              />
             )}
           </div>
         ))}
         {isStreaming && knowledgeSources.length > 0 && (
-          <ContextSources sources={knowledgeSources} />
+          <ContextSources
+            sources={knowledgeSources}
+            {...(onOpenKnowledge ? { onOpenKnowledge } : {})}
+          />
         )}
         {isStreaming && streamingContent && (
           <div className="flex gap-3 px-4 py-3">

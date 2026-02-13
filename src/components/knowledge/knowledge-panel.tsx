@@ -28,7 +28,12 @@ interface KnowledgeEntry {
   contributor: string;
 }
 
-export function KnowledgePanel() {
+interface KnowledgePanelProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function KnowledgePanel({ open, onOpenChange }: KnowledgePanelProps) {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<KnowledgeEntry | null>(null);
@@ -126,7 +131,7 @@ export function KnowledgePanel() {
 
   return (
     <>
-      <Sheet>
+      <Sheet {...(open !== undefined ? { open } : {})} {...(onOpenChange ? { onOpenChange } : {})}>
         <SheetTrigger asChild>
           <Button
             variant="outline"

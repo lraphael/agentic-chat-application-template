@@ -13,9 +13,10 @@ interface Source {
 
 interface ContextSourcesProps {
   sources: Source[];
+  onOpenKnowledge?: () => void;
 }
 
-export function ContextSources({ sources }: ContextSourcesProps) {
+export function ContextSources({ sources, onOpenKnowledge }: ContextSourcesProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (sources.length === 0) {
@@ -43,11 +44,16 @@ export function ContextSources({ sources }: ContextSourcesProps) {
       >
         <div className="border-border/50 bg-muted/30 mt-1 space-y-1 rounded-lg border p-2">
           {sources.map((source, i) => (
-            <div key={source.id} className="flex items-baseline gap-2 text-xs">
+            <button
+              key={source.id}
+              type="button"
+              onClick={onOpenKnowledge}
+              className="hover:bg-muted flex w-full items-baseline gap-2 rounded px-1 py-0.5 text-left text-xs transition-colors"
+            >
               <span className="text-primary font-mono font-medium">[{i + 1}]</span>
               <span className="text-foreground font-medium">{source.title}</span>
               <span className="text-muted-foreground">by {source.contributor}</span>
-            </div>
+            </button>
           ))}
         </div>
       </div>

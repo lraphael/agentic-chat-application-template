@@ -25,6 +25,8 @@ interface ChatSidebarProps {
   onDeleteConversation: (id: string) => void;
   isMobileOpen: boolean;
   onMobileClose: () => void;
+  isKnowledgeOpen: boolean;
+  onKnowledgeOpenChange: (open: boolean) => void;
 }
 
 function SidebarContent({
@@ -34,6 +36,8 @@ function SidebarContent({
   onNewChat,
   onRenameConversation,
   onDeleteConversation,
+  isKnowledgeOpen,
+  onKnowledgeOpenChange,
 }: Omit<ChatSidebarProps, "isMobileOpen" | "onMobileClose">) {
   const sorted = [...conversations].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
@@ -76,7 +80,7 @@ function SidebarContent({
 
       <Separator />
       <div className="p-3">
-        <KnowledgePanel />
+        <KnowledgePanel open={isKnowledgeOpen} onOpenChange={onKnowledgeOpenChange} />
       </div>
     </div>
   );
@@ -91,6 +95,8 @@ export function ChatSidebar({
   onDeleteConversation,
   isMobileOpen,
   onMobileClose,
+  isKnowledgeOpen,
+  onKnowledgeOpenChange,
 }: ChatSidebarProps) {
   return (
     <>
@@ -103,6 +109,8 @@ export function ChatSidebar({
           onNewChat={onNewChat}
           onRenameConversation={onRenameConversation}
           onDeleteConversation={onDeleteConversation}
+          isKnowledgeOpen={isKnowledgeOpen}
+          onKnowledgeOpenChange={onKnowledgeOpenChange}
         />
       </aside>
 
@@ -130,6 +138,8 @@ export function ChatSidebar({
             }}
             onRenameConversation={onRenameConversation}
             onDeleteConversation={onDeleteConversation}
+            isKnowledgeOpen={isKnowledgeOpen}
+            onKnowledgeOpenChange={onKnowledgeOpenChange}
           />
         </SheetContent>
       </Sheet>
