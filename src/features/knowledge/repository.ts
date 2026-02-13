@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, ilike, or, sql } from "drizzle-orm";
 
 import { db } from "@/core/database/client";
 
@@ -47,16 +47,19 @@ export async function deleteById(id: string): Promise<boolean> {
 /**
  * Full-text search using Postgres tsvector/tsquery.
  * Title matches are weighted higher (A) than content matches (B).
- * Falls back to ILIKE if FTS returns no results.
+ *
+ * Uses websearch_to_tsquery which handles natural language queries with
+ * implicit OR between words (unlike plainto_tsquery which uses AND).
+ * Falls back to ILIKE on individual words if FTS returns no results.
  */
 export async function fullTextSearch(query: string, limit = 5): Promise<KnowledgeEntry[]> {
-  // Primary: Postgres full-text search with ranking
+  // Primary: Postgres full-text search with ranking (OR semantics for better recall)
   // db.execute with postgres-js returns the result array directly (no .rows)
   const ftsResults: KnowledgeEntry[] = await db.execute(sql`
     SELECT id, title, content, tags, contributor, created_at, updated_at
     FROM knowledge_entries
-    WHERE search_vector @@ plainto_tsquery('english', ${query})
-    ORDER BY ts_rank(search_vector, plainto_tsquery('english', ${query})) DESC
+    WHERE search_vector @@ websearch_to_tsquery('english', ${query})
+    ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${query})) DESC
     LIMIT ${limit}
   `);
 
@@ -64,15 +67,23 @@ export async function fullTextSearch(query: string, limit = 5): Promise<Knowledg
     return ftsResults;
   }
 
-  // Fallback: ILIKE for partial matches when FTS finds nothing
-  const pattern = `%${query}%`;
-  const ilikeResults: KnowledgeEntry[] = await db.execute(sql`
-    SELECT id, title, content, tags, contributor, created_at, updated_at
-    FROM knowledge_entries
-    WHERE title ILIKE ${pattern} OR content ILIKE ${pattern}
-    ORDER BY created_at DESC
-    LIMIT ${limit}
-  `);
+  // Fallback: ILIKE on individual words for partial matches when FTS finds nothing
+  const words = query
+    .split(/\s+/)
+    .filter((w) => w.length > 2)
+    .slice(0, 5);
+  if (words.length === 0) {
+    return [];
+  }
+  const conditions = words.flatMap((w) => {
+    const pattern = `%${w}%`;
+    return [ilike(knowledgeEntries.title, pattern), ilike(knowledgeEntries.content, pattern)];
+  });
 
-  return ilikeResults;
+  return db
+    .select()
+    .from(knowledgeEntries)
+    .where(or(...conditions))
+    .orderBy(desc(knowledgeEntries.createdAt))
+    .limit(limit);
 }
