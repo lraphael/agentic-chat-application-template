@@ -111,8 +111,8 @@ export function ChatLayout() {
             <div className="text-center">
               <h2 className="text-xl font-semibold">How can I help you today?</h2>
               <p className="text-muted-foreground mt-1 text-sm">
-                Ask anything — try &quot;Exit Code 137 - Out of Memory&quot; to search the knowledge
-                base.
+                Ask anything — try {'"'}Exit Code 137 - Out of Memory{'"'} to search the
+                knowledge base.
               </p>
             </div>
           </div>
