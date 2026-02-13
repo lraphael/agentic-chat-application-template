@@ -33,6 +33,9 @@ export const env = {
   LOG_LEVEL: getOptionalEnv("LOG_LEVEL", "info"),
   APP_NAME: getOptionalEnv("APP_NAME", "ai-opti-nextjs-starter"),
 
+  // Workshop table prefix (optional - if set, app tables are prefixed e.g. "cole_projects")
+  TABLE_PREFIX: process.env["TABLE_PREFIX"] ?? "",
+
   // Supabase config (required)
   NEXT_PUBLIC_SUPABASE_URL: getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: getSupabaseKey(),

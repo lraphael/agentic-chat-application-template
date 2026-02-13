@@ -15,6 +15,7 @@ const mockMessage: Message = {
   conversationId: "conv-123",
   role: "user",
   content: "Hello",
+  sources: null,
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
 };
@@ -51,6 +52,11 @@ mock.module("@/features/chat/stream", () => ({
     { role: "system", content: "test" },
     ...history.map((m) => ({ role: m.role, content: m.content })),
   ]),
+}));
+
+// Mock the knowledge feature (shared knowledge base)
+mock.module("@/features/knowledge", () => ({
+  buildKnowledgeContext: mock(() => Promise.resolve({ context: "", sources: [] })),
 }));
 
 // Import route after mocking

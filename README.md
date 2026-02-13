@@ -25,7 +25,7 @@ A real-time AI chat application built with Next.js, Supabase, and OpenRouter. Fe
 | AI | OpenRouter (configurable model) |
 | Linting | Biome |
 | Testing | Bun test + React Testing Library |
-| Logging | Pino (structured JSON) |
+| Logging | Structured JSON (console-based) |
 
 ## Quick Start
 
@@ -37,8 +37,8 @@ bun install
 cp .env.example .env
 # Edit .env with your credentials (see Environment Variables below)
 
-# Run database migrations
-bun run db:migrate
+# Create database tables
+bun run db:setup
 
 # Start development server
 bun run dev
@@ -47,6 +47,9 @@ bun run dev
 ## Environment Variables
 
 ```bash
+# Table prefix (optional — for shared database workshops)
+TABLE_PREFIX=yourname           # Creates yourname_projects, yourname_chat_conversations, etc.
+
 # OpenRouter (required for AI responses)
 OPENROUTER_API_KEY=your-openrouter-api-key
 OPENROUTER_MODEL=anthropic/claude-haiku-4.5    # or any OpenRouter model
@@ -67,6 +70,7 @@ bun run build        # Production build (includes type checking)
 bun run lint         # Check for lint/format errors
 bun run lint:fix     # Auto-fix lint/format issues
 bun test             # Run tests with coverage
+bun run db:setup     # Create tables (supports TABLE_PREFIX)
 bun run db:migrate   # Run pending database migrations
 bun run db:studio    # Open Drizzle Studio GUI
 ```
@@ -83,7 +87,7 @@ src/
 ├── core/                   # Shared infrastructure
 │   ├── config/            # Environment validation (Zod)
 │   ├── database/          # Drizzle client & schema
-│   ├── logging/           # Pino structured logging
+│   ├── logging/           # Structured JSON logging
 │   └── supabase/          # Server & client Supabase clients
 ├── features/              # Vertical slices (self-contained)
 │   ├── auth/              # Auth actions & hooks

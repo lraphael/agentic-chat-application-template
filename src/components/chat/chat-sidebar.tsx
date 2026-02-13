@@ -2,8 +2,10 @@
 
 import { MessageSquare, Plus } from "lucide-react";
 
+import { KnowledgePanel } from "@/components/knowledge/knowledge-panel";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 import { ConversationItem } from "./conversation-item";
@@ -71,6 +73,11 @@ function SidebarContent({
           </div>
         )}
       </ScrollArea>
+
+      <Separator />
+      <div className="p-3">
+        <KnowledgePanel />
+      </div>
     </div>
   );
 }

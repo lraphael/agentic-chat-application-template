@@ -5,18 +5,26 @@ import { toast } from "sonner";
 
 import { useLocalStorage } from "./use-local-storage";
 
-interface ChatMessage {
+export interface ChatMessage {
   id: string;
   conversationId: string;
   role: string;
   content: string;
   createdAt: string;
   updatedAt: string;
+  sources?: KnowledgeSource[];
+}
+
+export interface KnowledgeSource {
+  id: string;
+  title: string;
+  contributor: string;
 }
 
 async function readSSEStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   onChunk: (accumulated: string) => void,
+  onSources?: (sources: KnowledgeSource[]) => void,
 ): Promise<string> {
   const decoder = new TextDecoder();
   let accumulated = "";
@@ -43,7 +51,12 @@ async function readSSEStream(
           content?: string;
           type?: string;
           message?: string;
+          sources?: KnowledgeSource[];
         };
+        if (parsed.type === "sources" && onSources) {
+          onSources(parsed.sources as KnowledgeSource[]);
+          continue;
+        }
         if (parsed.type === "error") {
           toast.error(parsed.message ?? "Response may not have been saved");
           continue;
@@ -87,8 +100,10 @@ export function useChat() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const skipNextFetchRef = useRef(false);
+  const knowledgeSourcesRef = useRef<KnowledgeSource[]>([]);
 
   useEffect(() => {
     if (!activeConversationId) {
@@ -127,6 +142,8 @@ export function useChat() {
 
       setIsStreaming(true);
       setStreamingContent("");
+      setKnowledgeSources([]);
+      knowledgeSourcesRef.current = [];
 
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
@@ -168,14 +185,21 @@ export function useChat() {
           throw new Error("No reader");
         }
 
-        const accumulated = await readSSEStream(reader, setStreamingContent);
+        const accumulated = await readSSEStream(reader, setStreamingContent, (sources) => {
+          knowledgeSourcesRef.current = sources;
+          setKnowledgeSources(sources);
+        });
 
         if (accumulated) {
-          const assistantMessage = makeTempMessage(
+          const base = makeTempMessage(
             conversationId ?? activeConversationId ?? "",
             "assistant",
             accumulated,
           );
+          const assistantMessage: ChatMessage =
+            knowledgeSourcesRef.current.length > 0
+              ? { ...base, sources: knowledgeSourcesRef.current }
+              : base;
           setMessages((prev) => [...prev, assistantMessage]);
         }
       } catch (error) {
@@ -247,6 +271,7 @@ export function useChat() {
     isStreaming,
     isLoadingMessages,
     streamingContent,
+    knowledgeSources,
     sendMessage,
     selectConversation,
     createNewChat,

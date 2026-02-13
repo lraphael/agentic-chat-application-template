@@ -10,12 +10,14 @@ import {
   SendMessageSchema,
   streamChatCompletion,
 } from "@/features/chat";
+import { buildKnowledgeContext } from "@/features/knowledge";
 
 const logger = getLogger("api.chat.send");
 
 /**
  * POST /api/chat/send
  * Send a message and stream the AI response via SSE.
+ * Automatically searches the shared knowledge base for relevant context.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -34,26 +36,44 @@ export async function POST(request: NextRequest) {
     // Save user message
     await addMessage(conversationId, "user", content);
 
+    // Search knowledge base for relevant context
+    const { context: knowledgeContext, sources } = await buildKnowledgeContext(content);
+    if (sources.length > 0) {
+      logger.info({ conversationId, sourceCount: sources.length }, "chat.knowledge_context_found");
+    }
+
     // Get history for context
     const history = await getMessages(conversationId);
 
-    // Stream completion
-    const { stream, fullResponse } = await streamChatCompletion(history);
+    // Stream completion with knowledge context
+    const { stream, fullResponse } = await streamChatCompletion(history, { knowledgeContext });
 
-    // Wrap the stream to save assistant message after completion
+    // Wrap the stream to prepend sources and save assistant message after completion
     const reader = stream.getReader();
+    const encoder = new TextEncoder();
+    let sourcesSent = false;
+
     const wrappedStream = new ReadableStream({
       async pull(controller) {
+        // Send sources event before first content chunk
+        if (!sourcesSent) {
+          sourcesSent = true;
+          if (sources.length > 0) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: "sources", sources })}\n\n`),
+            );
+          }
+        }
+
         const { done, value } = await reader.read();
         if (!done) {
           controller.enqueue(value);
           return;
         }
         // Stream finished — save assistant message
-        const encoder = new TextEncoder();
         try {
           const fullText = await fullResponse;
-          await addMessage(conversationId, "assistant", fullText);
+          await addMessage(conversationId, "assistant", fullText, sources);
           logger.info({ conversationId }, "chat.assistant_message_saved");
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: "done", saved: true })}\n\n`),

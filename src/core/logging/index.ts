@@ -1,12 +1,10 @@
-import type { Logger as PinoLogger } from "pino";
-
 import {
   generateRequestId,
   getRequestContext,
   setRequestContext,
   withRequestContext,
 } from "./context";
-import { logger } from "./logger";
+import { type Logger, logger } from "./logger";
 
 export type { RequestContext } from "./context";
 export type { Logger } from "./logger";
@@ -27,7 +25,7 @@ export { generateRequestId, getRequestContext, logger, setRequestContext, withRe
  * logger.info({ projectId }, "project.create_completed");
  * logger.error({ projectId, error }, "project.create_failed");
  */
-export function getLogger(component: string): PinoLogger {
+export function getLogger(component: string): Logger {
   const context = getRequestContext();
 
   const bindings: Record<string, unknown> = { component };

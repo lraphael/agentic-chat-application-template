@@ -7,10 +7,19 @@ import type { Message } from "./models";
 
 const logger = getLogger("chat.stream");
 
-export function buildMessages(history: Message[]): Array<{ role: string; content: string }> {
+export function buildMessages(
+  history: Message[],
+  knowledgeContext?: string,
+): Array<{ role: string; content: string }> {
   const limitedHistory = history.slice(-MAX_CONTEXT_MESSAGES);
+
+  const systemParts = [SYSTEM_PROMPT];
+  if (knowledgeContext) {
+    systemParts.push(knowledgeContext);
+  }
+
   return [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: systemParts.join("\n\n") },
     ...limitedHistory.map((m) => ({ role: m.role, content: m.content })),
   ];
 }
@@ -49,7 +58,7 @@ function parseSSELine(line: string): ParsedSSELine {
 
 export async function streamChatCompletion(
   history: Message[],
-  signal?: AbortSignal,
+  options?: { signal?: AbortSignal; knowledgeContext?: string },
 ): Promise<{ stream: ReadableStream; fullResponse: Promise<string> }> {
   logger.info({ messageCount: history.length }, "stream.chat_started");
 
@@ -63,10 +72,10 @@ export async function streamChatCompletion(
       },
       body: JSON.stringify({
         model: env.OPENROUTER_MODEL,
-        messages: buildMessages(history),
+        messages: buildMessages(history, options?.knowledgeContext),
         stream: true,
       }),
-      signal: signal ?? null,
+      signal: options?.signal ?? null,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown fetch error";
