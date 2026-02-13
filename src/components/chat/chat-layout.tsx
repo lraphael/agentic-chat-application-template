@@ -29,6 +29,7 @@ export function ChatLayout() {
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false);
+  const [focusEntryId, setFocusEntryId] = useState<string | null>(null);
 
   const activeTitle = conversations.find((c) => c.id === activeConversationId)?.title ?? null;
 
@@ -54,7 +55,14 @@ export function ChatLayout() {
         isMobileOpen={isMobileOpen}
         onMobileClose={closeMobile}
         isKnowledgeOpen={isKnowledgeOpen}
-        onKnowledgeOpenChange={setIsKnowledgeOpen}
+        onKnowledgeOpenChange={(open) => {
+          setIsKnowledgeOpen(open);
+          if (!open) {
+            setFocusEntryId(null);
+          }
+        }}
+        focusEntryId={focusEntryId}
+        onFocusEntryIdChange={setFocusEntryId}
       />
 
       <div className="chat-gradient-bg flex flex-1 flex-col">
@@ -90,7 +98,10 @@ export function ChatLayout() {
             streamingContent={streamingContent}
             isStreaming={isStreaming}
             knowledgeSources={knowledgeSources}
-            onOpenKnowledge={() => setIsKnowledgeOpen(true)}
+            onOpenKnowledge={(entryId) => {
+              setFocusEntryId(entryId);
+              setIsKnowledgeOpen(true);
+            }}
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">

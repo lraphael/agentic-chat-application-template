@@ -27,6 +27,8 @@ interface ChatSidebarProps {
   onMobileClose: () => void;
   isKnowledgeOpen: boolean;
   onKnowledgeOpenChange: (open: boolean) => void;
+  focusEntryId: string | null;
+  onFocusEntryIdChange: (id: string | null) => void;
 }
 
 function SidebarContent({
@@ -38,6 +40,8 @@ function SidebarContent({
   onDeleteConversation,
   isKnowledgeOpen,
   onKnowledgeOpenChange,
+  focusEntryId,
+  onFocusEntryIdChange,
 }: Omit<ChatSidebarProps, "isMobileOpen" | "onMobileClose">) {
   const sorted = [...conversations].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
@@ -80,7 +84,12 @@ function SidebarContent({
 
       <Separator />
       <div className="p-3">
-        <KnowledgePanel open={isKnowledgeOpen} onOpenChange={onKnowledgeOpenChange} />
+        <KnowledgePanel
+          open={isKnowledgeOpen}
+          onOpenChange={onKnowledgeOpenChange}
+          focusEntryId={focusEntryId}
+          onFocusEntryIdChange={onFocusEntryIdChange}
+        />
       </div>
     </div>
   );
@@ -97,6 +106,8 @@ export function ChatSidebar({
   onMobileClose,
   isKnowledgeOpen,
   onKnowledgeOpenChange,
+  focusEntryId,
+  onFocusEntryIdChange,
 }: ChatSidebarProps) {
   return (
     <>
@@ -111,6 +122,8 @@ export function ChatSidebar({
           onDeleteConversation={onDeleteConversation}
           isKnowledgeOpen={isKnowledgeOpen}
           onKnowledgeOpenChange={onKnowledgeOpenChange}
+          focusEntryId={focusEntryId}
+          onFocusEntryIdChange={onFocusEntryIdChange}
         />
       </aside>
 
@@ -140,6 +153,8 @@ export function ChatSidebar({
             onDeleteConversation={onDeleteConversation}
             isKnowledgeOpen={isKnowledgeOpen}
             onKnowledgeOpenChange={onKnowledgeOpenChange}
+            focusEntryId={focusEntryId}
+            onFocusEntryIdChange={onFocusEntryIdChange}
           />
         </SheetContent>
       </Sheet>

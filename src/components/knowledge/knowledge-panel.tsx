@@ -31,9 +31,16 @@ interface KnowledgeEntry {
 interface KnowledgePanelProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  focusEntryId?: string | null;
+  onFocusEntryIdChange?: (id: string | null) => void;
 }
 
-export function KnowledgePanel({ open, onOpenChange }: KnowledgePanelProps) {
+export function KnowledgePanel({
+  open,
+  onOpenChange,
+  focusEntryId,
+  onFocusEntryIdChange,
+}: KnowledgePanelProps) {
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<KnowledgeEntry | null>(null);
@@ -211,6 +218,10 @@ export function KnowledgePanel({ open, onOpenChange }: KnowledgePanelProps) {
                     contributor={entry.contributor}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    {...(focusEntryId === entry.id ? { isFocused: true } : {})}
+                    {...(onFocusEntryIdChange
+                      ? { onFocusHandled: () => onFocusEntryIdChange(null) }
+                      : {})}
                   />
                 ))}
               </div>

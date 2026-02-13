@@ -14,7 +14,7 @@ interface MessageListProps {
   streamingContent: string;
   isStreaming: boolean;
   knowledgeSources?: KnowledgeSource[];
-  onOpenKnowledge?: () => void;
+  onOpenKnowledge?: (entryId: string) => void;
 }
 
 export function MessageList({

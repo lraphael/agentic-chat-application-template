@@ -13,7 +13,7 @@ interface Source {
 
 interface ContextSourcesProps {
   sources: Source[];
-  onOpenKnowledge?: () => void;
+  onOpenKnowledge?: (entryId: string) => void;
 }
 
 export function ContextSources({ sources, onOpenKnowledge }: ContextSourcesProps) {
@@ -47,7 +47,7 @@ export function ContextSources({ sources, onOpenKnowledge }: ContextSourcesProps
             <button
               key={source.id}
               type="button"
-              onClick={onOpenKnowledge}
+              onClick={() => onOpenKnowledge?.(source.id)}
               className="hover:bg-muted flex w-full items-baseline gap-2 rounded px-1 py-0.5 text-left text-xs transition-colors"
             >
               <span className="text-primary font-mono font-medium">[{i + 1}]</span>
