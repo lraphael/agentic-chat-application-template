@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { MAX_CONTEXT_MESSAGES } from "../constants";
+import { MAX_CONTEXT_MESSAGES, SYSTEM_PROMPT } from "../constants";
 import type { Message } from "../models";
 import { buildMessages } from "../stream";
 
@@ -24,7 +24,7 @@ describe("buildMessages", () => {
 
     expect(result[0]).toEqual({
       role: "system",
-      content: "You are a helpful AI assistant. Be concise, accurate, and friendly.",
+      content: SYSTEM_PROMPT,
     });
   });
 
