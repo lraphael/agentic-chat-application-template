@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,8 @@ interface KnowledgeEntryCardProps {
   content: string;
   tags: string[];
   contributor: string;
-  isFocused?: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  onFocusHandled?: () => void;
 }
 
 export function KnowledgeEntryCard({
@@ -27,39 +25,15 @@ export function KnowledgeEntryCard({
   content,
   tags,
   contributor,
-  isFocused,
   onEdit,
   onDelete,
-  onFocusHandled,
 }: KnowledgeEntryCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-
-  useEffect(() => {
-    if (isFocused) {
-      setIsExpanded(true);
-      setTimeout(() => {
-        cardRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
-      const timer = setTimeout(() => {
-        onFocusHandled?.();
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isFocused, onFocusHandled]);
   const isLong = content.length > 120;
   const preview = isLong ? `${content.substring(0, 120)}...` : content;
 
   return (
-    <div
-      ref={cardRef}
-      className={cn(
-        "group rounded-lg border p-3 transition-all duration-300",
-        isFocused
-          ? "border-primary bg-primary/5 ring-primary/20 ring-2"
-          : "border-border/50 hover:border-border",
-      )}
-    >
+    <div className="group border-border/50 hover:border-border rounded-lg border p-3 transition-colors">
       <div className="mb-1 flex items-start justify-between gap-2">
         <button
           type="button"

@@ -67,6 +67,17 @@ export function KnowledgePanel({
     void fetchEntries();
   }, [fetchEntries]);
 
+  useEffect(() => {
+    if (focusEntryId && entries.length > 0) {
+      const entry = entries.find((e) => e.id === focusEntryId);
+      if (entry) {
+        setEditingEntry(entry);
+        setIsFormOpen(true);
+      }
+      onFocusEntryIdChange?.(null);
+    }
+  }, [focusEntryId, entries, onFocusEntryIdChange]);
+
   const handleSearch = useCallback(
     (value: string) => {
       setSearchQuery(value);
@@ -218,10 +229,6 @@ export function KnowledgePanel({
                     contributor={entry.contributor}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
-                    {...(focusEntryId === entry.id ? { isFocused: true } : {})}
-                    {...(onFocusEntryIdChange
-                      ? { onFocusHandled: () => onFocusEntryIdChange(null) }
-                      : {})}
                   />
                 ))}
               </div>
